@@ -1,0 +1,14 @@
+{
+  "name": "cli-mailer",
+  "version": "1.0.0",
+  "description": "CLI tool used to send emails through API calls",
+  "main": "index.js",
+  "author": "Jesus Cocaño",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "readline": "^1.3.0"
+  }
+}
