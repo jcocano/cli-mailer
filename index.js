@@ -1,7 +1,8 @@
 const readline = require('readline');
+const fs = require('fs');
+const path = require('path');
 const { sendBulk } = require('./mailer');
-
-const { EMAIL_TEMPLATE, EMAILS, TEST_EMAILS } = require('./config');
+const { API_URL, EMAIL_TEMPLATE, MAILING_LIST } = require('./config');
 
 function askQuestion(query) {
   const rl = readline.createInterface({
@@ -15,29 +16,35 @@ function askQuestion(query) {
   }));
 }
 
-async function sendTest() {
-  const testAnswer = await askQuestion(
-    `Do you want to send a test for ${EMAIL_TEMPLATE} to ${TEST_EMAILS.length} 
-    email directions ? (Y / N) `);
-
-  if (testAnswer.toLowerCase() === 'y') {
-    console.log('📨 sending TEST emails...🚀');
-    TEST_EMAILS.forEach(sendBulk);
-  } else {
-    await sendReal();
-  }
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function sendReal() {
-  const bulkAnswer = await askQuestion(
-    `Do you wish to send ${EMAIL_TEMPLATE} to ${EMAILS.length} emails? 
-    Please note: Once initiated, this operation cannot be cancelled. (Y / N) `);
+async function sendEmails() {
+  const emailsFilePath = path.resolve(MAILING_LIST);
+  const emailData = JSON.parse(fs.readFileSync(emailsFilePath, 'utf8'));
+  const errorLog = [];
+
+  const bulkAnswer = await askQuestion(`Do you wish to send ${EMAIL_TEMPLATE} to ${emailData.length} emails? (Y / N) `);
+
   if (bulkAnswer.toLowerCase() === 'y') {
-    console.log('📨 sending emails...🚀');
-    EMAILS.forEach(sendBulk);
+    console.log('📨 Sending emails...🚀');
+
+    for (const emailInfo of emailData) {
+      const result = await sendBulk(emailInfo);
+      if (result.error) {
+        errorLog.push(result);
+      }
+      await delay(5000);
+    }
+
+    if (errorLog.length > 0) {
+      fs.writeFileSync('errorLog.json', JSON.stringify(errorLog, null, 2), 'utf8');
+      console.log('Errors were logged to errorLog.json');
+    }
   } else {
-    console.log('⚠️ \u0020aborting ⚠️');
+    console.log('⚠️ Aborting ⚠️');
   }
 }
 
-sendTest();
+sendEmails();
