@@ -1,27 +1,25 @@
 const { API_URL, EMAIL_TEMPLATE } = require('./config');
 
-function sendBulk(email) {
-  const requestBody = JSON.stringify({ to: email });
+async function sendBulk(emailInfo, idx) {
+  const requestBody = JSON.stringify(emailInfo);
 
-  return fetch(API_URL + EMAIL_TEMPLATE, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: requestBody
-  })
-  .then(response => {
+  try {
+    const response = await fetch(API_URL + EMAIL_TEMPLATE, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: requestBody
+    });
+
     if (!response.ok) {
-      throw new Error(`Error in the request for ${email}`);
+      throw new Error(`HTTP status ${response.status}`);
     }
-    return response.text();
-  })
-  .then(data => {
-    console.log(`Successful Request for ${email}:`, data);
-  })
-  .catch(error => {
-    console.error(`Error for ${email}:`, error);
-  });
+    console.log(emailInfo.to);
+  } catch (error) {
+    console.error(`failed at ${idx}`, error);
+    throw error;
+  }
 }
 
 module.exports = {

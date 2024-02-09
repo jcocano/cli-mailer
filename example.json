@@ -1,0 +1,14 @@
+[
+  {
+    "to": "user@domain.xyz",
+    "payload": {
+      "account": "this.is.example"
+    }
+  },
+  {
+    "to": "user@domain.com",
+    "payload": {
+      "account": "0x1000000000000"
+    }
+  }
+]

@@ -1,7 +1,8 @@
 const readline = require('readline');
+const fs = require('fs');
+const path = require('path');
 const { sendBulk } = require('./mailer');
-
-const { EMAIL_TEMPLATE, EMAILS, TEST_EMAILS } = require('./config');
+const { EMAIL_TEMPLATE } = require('./config');
 
 function askQuestion(query) {
   const rl = readline.createInterface({
@@ -15,29 +16,29 @@ function askQuestion(query) {
   }));
 }
 
-async function sendTest() {
-  const testAnswer = await askQuestion(
-    `Do you want to send a test for ${EMAIL_TEMPLATE} to ${TEST_EMAILS.length} 
-    email directions ? (Y / N) `);
+async function sendEmails() {
+  const START_AT = parseInt(process.env.START_AT ?? '0', 10);
+  const MAILING_LIST = process.env.MAILING_LIST;
+  if (!MAILING_LIST) return console.log('⚠️ MAILING_LIST environment variable not found ⚠️');
+  
+  const emailsFilePath = path.resolve(MAILING_LIST);
+  let emailData = JSON.parse(fs.readFileSync(emailsFilePath, 'utf8'));
+  emailData = emailData.slice(START_AT);
 
-  if (testAnswer.toLowerCase() === 'y') {
-    console.log('📨 sending TEST emails...🚀');
-    TEST_EMAILS.forEach(sendBulk);
-  } else {
-    await sendReal();
-  }
-}
+  if(emailData.length === 0) return console.log('⚠️ No emails to send ⚠️');
 
-async function sendReal() {
-  const bulkAnswer = await askQuestion(
-    `Do you wish to send ${EMAIL_TEMPLATE} to ${EMAILS.length} emails? 
-    Please note: Once initiated, this operation cannot be cancelled. (Y / N) `);
+  const bulkAnswer = await askQuestion(`Do you wish to send ${EMAIL_TEMPLATE} to ${emailData.length} emails? (Y / N) `);
+
   if (bulkAnswer.toLowerCase() === 'y') {
-    console.log('📨 sending emails...🚀');
-    EMAILS.forEach(sendBulk);
+    console.log('📨 Sending emails...🚀');
+
+    var idx = START_AT;
+    for (const emailInfo of emailData) {
+      const result = await sendBulk(emailInfo, idx++);
+    }
   } else {
-    console.log('⚠️ \u0020aborting ⚠️');
+    console.log('⚠️ Aborting ⚠️');
   }
 }
 
-sendTest();
+sendEmails();
