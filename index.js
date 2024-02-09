@@ -2,7 +2,7 @@ const readline = require('readline');
 const fs = require('fs');
 const path = require('path');
 const { sendBulk } = require('./mailer');
-const { API_URL, EMAIL_TEMPLATE, MAILING_LIST } = require('./config');
+const { EMAIL_TEMPLATE } = require('./config');
 
 function askQuestion(query) {
   const rl = readline.createInterface({
@@ -16,31 +16,23 @@ function askQuestion(query) {
   }));
 }
 
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 async function sendEmails() {
+  const START_AT = parseInt(process.env.START_AT ?? '0', 10);
+  const MAILING_LIST = process.env.MAILING_LIST;
+  if (!MAILING_LIST) return console.log('⚠️ MAILING_LIST environment variable not found ⚠️');
   const emailsFilePath = path.resolve(MAILING_LIST);
-  const emailData = JSON.parse(fs.readFileSync(emailsFilePath, 'utf8'));
-  const errorLog = [];
+  let emailData = JSON.parse(fs.readFileSync(emailsFilePath, 'utf8'));
+  emailData = emailData.slice(START_AT);
+  if(emailData.length === 0) return console.log('⚠️ No emails to send ⚠️');
 
   const bulkAnswer = await askQuestion(`Do you wish to send ${EMAIL_TEMPLATE} to ${emailData.length} emails? (Y / N) `);
 
   if (bulkAnswer.toLowerCase() === 'y') {
     console.log('📨 Sending emails...🚀');
 
+    var idx = START_AT;
     for (const emailInfo of emailData) {
-      const result = await sendBulk(emailInfo);
-      if (result.error) {
-        errorLog.push(result);
-      }
-      await delay(5000);
-    }
-
-    if (errorLog.length > 0) {
-      fs.writeFileSync('errorLog.json', JSON.stringify(errorLog, null, 2), 'utf8');
-      console.log('Errors were logged to errorLog.json');
+      const result = await sendBulk(emailInfo, idx++);
     }
   } else {
     console.log('⚠️ Aborting ⚠️');

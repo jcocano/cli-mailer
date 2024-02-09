@@ -1,6 +1,6 @@
 const { API_URL, EMAIL_TEMPLATE } = require('./config');
 
-async function sendBulk(emailInfo) {
+async function sendBulk(emailInfo, idx) {
   const requestBody = JSON.stringify(emailInfo);
 
   try {
@@ -15,11 +15,10 @@ async function sendBulk(emailInfo) {
     if (!response.ok) {
       throw new Error(`HTTP status ${response.status}`);
     }
-
-    return { ...emailInfo, error: false, errorMessage: '' };
+    console.log(emailInfo.to);
   } catch (error) {
-    console.error(`Error for ${emailInfo.to}:`, error);
-    return { ...emailInfo, error: true, errorMessage: error.message };
+    console.error(`failed at ${idx}`, error);
+    throw error;
   }
 }
 
