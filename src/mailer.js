@@ -1,14 +1,18 @@
-const { API_URL, EMAIL_TEMPLATE } = require('./config');
+import { API_URL, EMAIL_TEMPLATE, AUTHORIZATION } from './config.js';
 
-async function sendBulk(emailInfo, idx) {
+function buildHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  if (AUTHORIZATION) headers['Authorization'] = AUTHORIZATION;
+  return headers;
+}
+
+export async function sendBulk(emailInfo, idx) {
   const requestBody = JSON.stringify(emailInfo);
 
   try {
     const response = await fetch(API_URL + EMAIL_TEMPLATE, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: buildHeaders(),
       body: requestBody
     });
 
@@ -21,7 +25,3 @@ async function sendBulk(emailInfo, idx) {
     throw error;
   }
 }
-
-module.exports = {
-  sendBulk
-};

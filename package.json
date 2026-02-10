@@ -2,13 +2,15 @@
   "name": "cli-mailer",
   "version": "1.0.0",
   "description": "CLI tool used to send emails through API calls",
-  "main": "index.js",
+  "main": "src/cli.js",
+  "bin": { "cli-mailer": "./bin/cli-mailer.js" },
+  "type": "module",
   "author": "Jesus Cocaño",
   "license": "MIT",
   "scripts": {
-    "start": "node index.js"
+    "start": "node bin/cli-mailer.js",
+    "test": "node scripts/ensure-env.js && node --test"
   },
-  "dependencies": {
-    "readline": "^1.3.0"
-  }
+  "engines": { "node": ">=24.13.1" },
+  "dependencies": {}
 }
